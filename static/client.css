@@ -31,11 +31,8 @@ a {
 .you {
   font-weight: bold;
 }
-.your-cards li {
-  list-style: none;
-  float: left;
-}
 .card {
+  display: inline-block;
   background: #fff;
   color: #000;
   padding: 10px;
@@ -66,10 +63,10 @@ a {
 .card .price .dollar {
   font-size: 70%;
 }
-.your-cards.selectable .card {
+.selectable .card {
   cursor: pointer;
 }
-.your-cards.selectable .card:hover {
+.selectable .card:hover {
   opacity: 0.9;
   -webkit-transform: translate(0, -20px);
   -moz-transform: translate(0, -20px);

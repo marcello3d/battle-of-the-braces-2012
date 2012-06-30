@@ -30,11 +30,8 @@ a {
   font-weight: bold;
 }
 
-.your-cards li {
-  list-style: none;
-  float: left;
-}
 .card {
+  display: inline-block;
   background: white;
   color: black;
   padding: 10px;
@@ -68,7 +65,8 @@ a {
   transition: opacity 250ms, transform 250ms;
 }
 
-.your-cards.selectable {
+
+.selectable {
   .card {
     cursor: pointer;
   }

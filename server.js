@@ -177,7 +177,9 @@ socket.on('connection', function(connection) {
                         };
                     });
 
-                    send('reveal-offerings', cleanedOffers);
+                    send('reveal-offerings', {
+                        cards:cleanedOffers
+                    });
                 });
 
                 room.on('picked', function(item_id) {

@@ -151,16 +151,16 @@ Room.prototype.offer = function(item_id) {
 
     // the item may belong to the turn's user
     // TODO check that the user owns this item
-    if (!self.user_offer) {
+    if (self.user_offer) {
+        // offers is user_id -> item
+        self.offers[listing.user.id] = listing;
+    } else {
         self.user_offer = listing;
     }
 
     // user has offered the item
     // other users now need to submit their offerings
-    self.emit('offer', listing.user.id, listing.id);
-
-    // offers is user_id -> item
-    self.offers[listing.user.id] = listing;
+    self.emit('offer', listing.user.id, listing);
 
     if (Object.keys(self.offers).length >= config.maxUsers - 1) {
         // send the offers so that they will be visible for selection
@@ -179,7 +179,7 @@ Room.prototype.pick = function(item_id) {
 
     // switch owning user for the items
     self.user_offer.user = counter_party;
-    listings.user = player;
+    listing.user = player;
 
     // TODO splice out the item from the user
     player.items;
