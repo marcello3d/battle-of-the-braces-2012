@@ -42,7 +42,7 @@ socket.on('connection', function(connection) {
         console.log('sending %j', command)
     }
     function sendError(message) {
-        send('error', { message:'message'});
+        send('error', { message:message});
     }
 
     var user;
@@ -118,7 +118,14 @@ socket.on('connection', function(connection) {
                     send('game-start', {
                         user: {
                             id: user.id,
-                            items: user.items
+                            items: user.items.map(function(item) {
+                                return {
+                                    id:item.id,
+                                    img:item.img,
+                                    title:item.title,
+                                    price:item.price
+                                }
+                            })
                         },
                         users: roomUsers
                     });
@@ -177,15 +184,15 @@ socket.on('connection', function(connection) {
             },
 
             'propose-card':function(command) {
-                room.offer(command.card);
+                user.room.offer(command.card);
             },
 
             'offer-trade':function(command) {
-                room.offer(command.card);
+                user.room.offer(command.card);
             },
 
             'accept-offer':function(command) {
-                room.pick(command.card);
+                user.room.pick(command.card);
             }
         };
 

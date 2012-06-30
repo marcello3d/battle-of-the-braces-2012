@@ -20,16 +20,11 @@ var Room = function(name) {
     self.round = 0;
 
     // offer of the turn user
-    self.user_offer;
+    self.user_offer = undefined;
 
     // items the other users have offered
     // user_id -> item
     self.offers = {};
-
-    // first time game is started
-    self.once('started', function() {
-        self.next_turn();
-    });
 };
 util.inherits(Room, EventEmitter);
 
@@ -76,7 +71,9 @@ Room.prototype.start = function() {
 
             // done loading
             if (!listing) {
-                return self.emit('started');
+                self.emit('started');
+                self.next_turn();
+                return;
             }
 
             // load the images for the listing
@@ -95,17 +92,18 @@ Room.prototype.start = function() {
             });
         })();
     });
-}
+};
 
 Room.prototype.next_turn = function() {
     var self = this;
+
+    var idx = self.round % config.maxUsers;
 
     // game over?
     if (++self.round >= config.maxRounds) {
         return self.emit('game-over');
     }
 
-    var idx = self.round % config.maxUsers;
     self.active_player = self.users[idx];
     self.user_offer = undefined;
 

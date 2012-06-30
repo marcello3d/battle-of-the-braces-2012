@@ -31,16 +31,16 @@ $(function() {
 
         function instructions(title, message) {
             $('#instruction b').text(title);
-            $('#instruction span').text(message);
+            $('#instruction span').text(" "+message);
         }
 
         function userName(id) {
-            return "Player "+users[id].number+" ("+users[id].name;
+            return "Player "+users[id].number+" ("+users[id].name+")";
         }
 
         sock.onmessage = function(e) {
             var json = JSON.parse(e.data);
-            console.log("got message", json);
+            console.log("got message: "+json.type, json);
             var commands = {
                 'login-ok': function(command) {
                     $('#login').hide(500);
@@ -100,7 +100,8 @@ $(function() {
                     $('#game').show(500);
 
                     var cards = $('#game ul.your-cards');
-                    command.items.forEach(function(item) {
+                    cards.empty();
+                    command.user.items.forEach(function(item) {
                         var image = $('<div class="card">' +
                             '<img>' +
                             '<div class="title">'+item.title+'</div>' +
@@ -134,14 +135,14 @@ $(function() {
                     currentTurnUserId = command.user;
                     if (currentTurnUserId == myUserId) {
                         state = PROPOSE_CARD;
-                        instructions(userName(myUserId)+": Your turn.",
+                        instructions("Your turn, "+userName(myUserId),
                             "You must choose a card to trade.");
 
                         // TODO Enable clicking of cards to propose card
 
                     } else {
-                        instructions(userName(currentTurnUserId)+"'s turn",
-                            userName(currentTurnUserId)+" is selecting a card.");
+                        instructions(userName(currentTurnUserId)+" is selecting a card",
+                            "");
                     }
                 },
                 'card-proposed' : function(command) {
@@ -247,7 +248,7 @@ $(function() {
         sock.send(JSON.stringify(command));
     }
     function sendError(message) {
-        send('error', { message:'message'});
+        send('error', { message:message});
     }
 
     function login() {
