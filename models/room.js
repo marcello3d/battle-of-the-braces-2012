@@ -127,6 +127,8 @@ Room.prototype.join = function(user) {
     user.items = [];
     user.id = self.users.length;
     self.users.push(user);
+
+    self.emit('join', user);
 };
 
 Room.prototype.leave = function(user) {
@@ -137,8 +139,8 @@ Room.prototype.leave = function(user) {
         return;
     }
 
-    self.users.splice(index, 1);
-    self.emit('leave');
+    var removed = self.users.splice(index, 1);
+    self.emit('leave', removed[0]);
 };
 
 // the user is offering up an item for trade

@@ -49,6 +49,17 @@ socket.on('connection', function(connection) {
 
     var user;
 
+    Object.keys(rooms).forEach(function(room_name) {
+        var room = rooms[room_name];
+        room.on('join', function(user) {
+            send('join', { user: { name: user.name }});
+        });
+
+        room.on('leave', function(user) {
+            send('leave', { user: { name: user.name }});
+        });
+    });
+
     function sendRooms() {
         send('rooms', {
             rooms: Object.keys(rooms).map(function(room_name) {
