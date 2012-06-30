@@ -117,6 +117,7 @@ Room.prototype.next_turn = function() {
 
     self.active_player = self.users[idx];
     self.user_offer = undefined;
+    self.offers = {};
 
     // next user's term
     self.emit('turn', self.round, idx);
