@@ -26,7 +26,17 @@ $(function() {
 
         var state = WAITING;
         var myUserId;
+        var users;
         var currentTurnUserId;
+
+        function instructions(title, message) {
+            $('#instruction b').text(title);
+            $('#instruction span').text(message);
+        }
+
+        function userName(id) {
+            return "Player "+users[id].number+" ("+users[id].name;
+        }
 
         sock.onmessage = function(e) {
             var json = JSON.parse(e.data);
@@ -69,9 +79,11 @@ $(function() {
                     $("#waiting .status").text(command.status);
 
                     var userList = $('#waiting ul');
-                    userList.empty();
                     var username = $('#username').val();
-                    command.users.forEach(function(user) {
+
+                    userList.empty();
+                    Object.keys(command.users).forEach(function(userId) {
+                        var user = command.users[userId];
                         userList.append($('<li></li>').text(user.name).toggleClass('you',user.self));
                     });
 
@@ -99,14 +111,20 @@ $(function() {
                         console.dir(item)
                     });
 
+                    users = command.users;
+
                     var gameUserList = $('#game ul.users');
                     gameUserList.empty();
-                    command.users.forEach(function(user) {
-                        if (!user.self) {
+
+                    var playerNumber = 1;
+                    Object.keys(command.users).forEach(function(userId) {
+                        var user = command.users[userId];
+                        user.number = playerNumber++;
+
+                        if (userId != myUserId) {
                             gameUserList.append($('<li></li>').text(user.name));
                         }
                     });
-
                 },
                 'turn' : function(command) {
 //                    {
@@ -116,6 +134,14 @@ $(function() {
                     currentTurnUserId = command.user;
                     if (currentTurnUserId == myUserId) {
                         state = PROPOSE_CARD;
+                        instructions(userName(myUserId)+": Your turn.",
+                            "You must choose a card to trade.");
+
+                        // TODO Enable clicking of cards to propose card
+
+                    } else {
+                        instructions(userName(currentTurnUserId)+"'s turn",
+                            userName(currentTurnUserId)+" is selecting a card.");
                     }
                 },
                 'card-proposed' : function(command) {
@@ -128,20 +154,22 @@ $(function() {
 //                            title: ...
 //                        }
 //                    }
+                    // Current player has made offer
+                    // TODO: animate in the current player's card
+
                     state = OFFER_CARD;
+                    instructions("Trade time!",
+                        "You must offer a card to trade with " + userName(currentTurnUserId) + ".");
+
+                    // TODO Enable clicking of cards to offer trade
                 },
                 'card-offered' : function(command) {
 //                    {
 //                        user: <id>
-//                        card: { // ONLY IF YOUR TURN
-//                            id: ...
-//                            img: {
-//                                ...
-//                            },
-//                            title: ...
-//                        }
 //                    }
-                    state = WAITING;
+
+                    // A player has made an offer to the current player
+                    // TODO animate in blank card for that player
                 },
                 'reveal-offerings' : function(command) {
 //                    {
@@ -168,7 +196,10 @@ $(function() {
 //                              title: ...
 //                         }
 //                    }
-                    if (myTurn) {
+                    // TODO animate all cards into stack
+                    // TODO animate cards out
+                    // TODO animate cards flip over
+                    if (currentTurnUserId == myUserId) {
                         state = CHOOSE_OFFER;
                     }
                 },
@@ -176,6 +207,8 @@ $(function() {
 //                    {
 //                        card: (user id)
 //                    }
+                    // TODO animate selected card to current player
+                    // TODO animate other cards to various players
                 },
                 'game-complete': function(command) {
 //                    {
@@ -187,6 +220,8 @@ $(function() {
 //                            ...
 //                        ]
 //                    }
+                    // TODO show scores
+                    // TODO Flip all cards
                 }
             };
             if (commands[json.type]) {

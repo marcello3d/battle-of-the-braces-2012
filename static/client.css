@@ -41,6 +41,11 @@ a {
   padding: 10px;
   margin: 5px;
   border-radius: 3px;
+  opacity: 0.8;
+  transform: translate(0, 0);
+  -webkit-transition: opacity 250ms, transform 250ms;
+  -moz-transition: opacity 250ms, transform 250ms;
+  transition: opacity 250ms, transform 250ms;
 }
 .card img {
   margin-bottom: 2px;
@@ -58,4 +63,39 @@ a {
 }
 .card .price .dollar {
   font-size: 70%;
+}
+.card:hover {
+  opacity: 1;
+  transform: translate(0, -10px);
+}
+.flippable-wrapper-wrapper {
+  display: block;
+  width: 200px;
+  height: 140px;
+  position: relative;
+  float: left;
+}
+.flippable-wrapper-wrapper.scroll {
+  overflow: hidden;
+}
+.flippable-wrapper-wrapper.scroll .back {
+  bottom: -280px;
+}
+.flippable-wrapper {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.flippable-wrapper .front {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+}
+.flippable-wrapper .back {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: #fff;
 }
