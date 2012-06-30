@@ -210,8 +210,8 @@ socket.on('connection', function(connection) {
                     user.send('pre-game', {
                         status:
                             waitingUsers == 0 ?
-                            'setting up game...' :
-                            'waiting on '+(waitingUsers)+' more '+(waitingUsers==1 ? 'user' : 'users')+'...',
+                            'Setting up game...' :
+                            'Waiting on '+(waitingUsers)+' more '+(waitingUsers==1 ? 'user' : 'users')+'...',
                         users: roomUsers
                     })
                 });

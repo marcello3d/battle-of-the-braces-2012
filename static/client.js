@@ -33,17 +33,9 @@ $(function() {
 
         function instructions(title, message, waiting) {
             var instruction = $('#instruction');
-            function show() {
-                instruction.toggleClass("waiting", !!waiting);
-                $('#instruction b').text(title||'');
-                $('#instruction span').text(" "+(message||''));
-                instruction.show(250);
-            }
-            if (waiting) {
-                show();
-            } else {
-                instruction.stop().hide(250, show);
-            }
+            instruction.toggleClass("waiting", !!waiting);
+            $('#instruction b').text(title||'');
+            $('#instruction span').text(" "+(message||''));
         }
 
         function userName(id) {
