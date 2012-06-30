@@ -6,6 +6,7 @@ var util = require('util');
 
 // local
 var etsy = require('../lib/etsy');
+var config = require('../config.js');
 
 var Room = function(name) {
     var self = this;
@@ -14,7 +15,7 @@ var Room = function(name) {
 
     // first user to join is the first to play
     self.turn = 0;
-}
+};
 util.inherits(Room, EventEmitter);
 
 /// initialize a game room
@@ -23,7 +24,7 @@ Room.prototype.start = function() {
     var self = this;
 
     // why are there not 4 users??
-    if (self.users.length !== 4) {
+    if (self.users.length !== config.maxUsers) {
         return;
     }
 
@@ -34,11 +35,12 @@ Room.prototype.start = function() {
             return console.error(err);
         }
 
-        if (listings.length < 4 * 5) {
+        var listingCount = config.maxUsers * config.startCardCount;
+        if (listings.length < listingCount) {
             return console.error(new Error('not enough listings'));
         }
 
-        var listings = listings.slice(0, 20);
+        listings = listings.slice(0, listingCount);
         var count = 0;
         var uid = 0;
         var user = self.users[uid];
@@ -49,7 +51,7 @@ Room.prototype.start = function() {
             }
 
             // after this user has been assigned 5 items
-            if (count++ >= 5) {
+            if (count++ >= config.startCardCount) {
                 user = self.users[++uid];
                 count = 0;
             }

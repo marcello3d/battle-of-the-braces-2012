@@ -3,7 +3,8 @@ var stylus = require('stylus');
 var sockjs = require('sockjs');
 
 // local
-var Room = require('./models/room');
+var Room = require('./models/room.js');
+var config = require('./config.js');
 
 // Setup express routes
 var app = express();
@@ -93,7 +94,7 @@ socket.on('connection', function(connection) {
                 room.join(user);
                 user.room = room;
 
-                var maxUsers = 4;
+                var maxUsers = config.maxUsers;
                 var roomUsers = room.users.map(function(user) {
                     return {
                         name: user.name
@@ -120,7 +121,7 @@ socket.on('connection', function(connection) {
                     })
                 });
 
-                if (roomUsers.length === 4) {
+                if (roomUsers.length === maxUsers) {
                     room.start();
                 }
             },
