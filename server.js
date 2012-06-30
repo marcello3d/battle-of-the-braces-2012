@@ -27,7 +27,12 @@ var socket = sockjs.createServer();
 
 var users = [];
 
-var rooms = [];
+var rooms = [
+    {
+        name:'test room',
+        users:[]
+    }
+];
 
 socket.on('connection', function(connection) {
     function send(type, command) {
@@ -65,7 +70,6 @@ socket.on('connection', function(connection) {
                             };
                         })
                     });
-                    send('game-state', { state: 'lobby' });
                 }
             },
 
@@ -74,9 +78,29 @@ socket.on('connection', function(connection) {
                     sendError("You're already in a room");
                 } else {
                     user.room = command.id;
+                    var maxUsers = 4;
+                    var roomUsers = [
+                        {
+                            name: "some user"
+                        },
+                        {
+                            name: "some user"
+                        },
+                        {
+                            name: "some user"
+                        },
+                        {
+                            name: "some user"
+                        }
+                    ];
+                    var waitingUsers = maxUsers - roomUsers.length;
                     send('game-state', {
                         state: 'waiting',
-                        currentUsers: [] // TODO
+                        status:
+                            waitingUsers == 0 ?
+                                'setting up game...' :
+                                'waiting on '+(waitingUsers)+' more '+(waitingUsers==1 ? 'user' : 'users')+'...',
+                        users: roomUsers // TODO
                     })
                 }
             },
