@@ -17,8 +17,8 @@ $(function() {
             }
         };
         sock.onmessage = function(e) {
-            console.log("got message", e.data);
             var json = JSON.parse(e.data);
+            console.log("got message", json);
             var commands = {
                 'login-ok': function(command) {
                     $('#login').hide(500);
@@ -53,8 +53,11 @@ $(function() {
 
                     var userList = $('#waiting ul');
                     userList.empty();
+                    var gameUserList = $('#game ul.users');
+                    var username = $('#username').val();
                     command.users.forEach(function(user) {
-                        userList.append($('<li></li>').text(user.name))
+                        userList.append($('<li></li>').text(user.name).toggleClass('you',user.name == username));
+                        gameUserList.append($('<li></li>').text(user.name).toggleClass('you',user.name == username));
                     });
 
                     $('#waiting').show(500);
@@ -64,6 +67,12 @@ $(function() {
                     $('#rooms').hide(500);
                     $('#waiting').hide(500);
                     $('#game').show(500);
+
+                    var cards = $('#game ul.your-cards');
+                    command.items.forEach(function(item) {
+                        cards.append($('<li><img/></li>').append($('<img>').attr('src', item.img.medium)));
+                        console.dir(item)
+                    })
                 },
 
                 'card-proposed':function(command) {
