@@ -2,36 +2,20 @@
 
 // builtin
 var EventEmitter = require('events').EventEmitter;
-var util = reqire('util');
+var util = require('util');
 
 // local
 var etsy = require('../lib/etsy');
 
-var RoomUser = function(user) {
-    var self = this;
-    self.user = user;
-
-    // user starts with no items
-    self.items = [];
-};
-
-RoomUser.add_item = function(item) {
-    var self = this;
-    self.items.push[item];
-};
-
-RoomUser.get_items = function() {
-    return this.items;
-};
-
-var Room = function() {
+var Room = function(name) {
     var self = this;
     self.users = [];
+    self.name = name;
 
     // first user to join is the first to play
     self.turn = 0;
 }
-util.inheritis(Room, EventEmitter);
+util.inherits(Room, EventEmitter);
 
 /// initialize a game room
 Room.prototype.start = function() {
@@ -57,7 +41,7 @@ Room.prototype.start = function() {
         var listings = listings.slice(0, 20);
         var count = 0;
         var uid = 0;
-        var user = users[uid];
+        var user = self.users[uid];
 
         (function next(err) {
             if (err) {
@@ -65,8 +49,8 @@ Room.prototype.start = function() {
             }
 
             // after this user has been assigned 5 items
-            if (count++ > 5) {
-                user = users[++uid];
+            if (count++ >= 5) {
+                user = self.users[++uid];
                 count = 0;
             }
 
@@ -85,20 +69,29 @@ Room.prototype.start = function() {
                 }
 
                 listing.img = details;
-                user.add_item(listing);
+                user.items.push(listing);
                 next(err);
             });
-        });
+        })();
     });
 }
 
 /// add a user to the room
 Room.prototype.join = function(user) {
     var self = this;
-    users.push(new RoomUser(user));
+    user.items = [];
+    self.users.push(user);
 };
 
-Room.prototype.users = function() {
-    return this.users;
+Room.prototype.leave = function(user) {
+    var self = this;
+
+    var index = self.users.indexOf(user);
+    if (index < 0) {
+        return;
+    }
+
+    self.users.splice(index, 1);
 };
 
+module.exports = Room;

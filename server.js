@@ -2,6 +2,8 @@ var express = require('express');
 var stylus = require('stylus');
 var sockjs = require('sockjs');
 
+// local
+var Room = require('./models/room');
 
 // Setup express routes
 var app = express();
@@ -27,19 +29,16 @@ var socket = sockjs.createServer();
 
 var users = [];
 
-var rooms = [
-    {
-        name:'test room',
-        users:[]
-    }
-];
+var rooms = {
+    'catfuck': new Room()
+};
 
 socket.on('connection', function(connection) {
     function send(type, command) {
         command = command || {};
         command.type = type;
         connection.write(JSON.stringify(command));
-        console.log("sending")
+        console.log('sending %j', command)
     }
     function sendError(message) {
         send('error', { message:'message'});
@@ -53,55 +52,76 @@ socket.on('connection', function(connection) {
         var commands = {
            'login': function(command) {
                 if (user) {
-                    sendError("already logged in");
-                } else {
-                    user = {
-                        username:command.username
-                    };
-                    users.push(user);
-                    console.log("user logged in: ", user);
-                    send('login-ok');
-                    send('rooms', {
-                        rooms: rooms.map(function(room) {
-                            // Only send relevant data to the client
-                            return {
-                                name:room.name,
-                                users:[] // TODO
-                            };
-                        })
-                    });
+                    return sendError("already logged in");
                 }
+                user = {
+                    name:command.username,
+                    send: send
+                };
+
+                console.log("user logged in: ", user);
+                send('login-ok');
+                send('rooms', {
+                    rooms: Object.keys(rooms).map(function(room_name) {
+                        var room = rooms[room_name];
+                        // Only send relevant data to the client
+                        return {
+                            name: room_name,
+                            users: room.users.map(function(user) {
+                                return {
+                                    name: user.name
+                                }
+                            })
+                        };
+                    })
+                });
+            },
+
+            'error': function(command) {
+                console.error('client error', command.message);
             },
 
             'join':function(command) {
                 if (user.room) {
-                    sendError("You're already in a room");
-                } else {
-                    user.room = command.id;
-                    var maxUsers = 4;
-                    var roomUsers = [
-                        {
-                            name: "some user"
-                        },
-                        {
-                            name: "some user"
-                        },
-                        {
-                            name: "some user"
-                        },
-                        {
-                            name: "some user"
-                        }
-                    ];
-                    var waitingUsers = maxUsers - roomUsers.length;
-                    send('game-state', {
-                        state: 'waiting',
+                    return sendError("You're already in a room");
+                }
+                var room = rooms[command.name];
+                if (!room) {
+                    return sendError('No room!!');
+                }
+
+                room.join(user);
+                user.room = room;
+
+                var maxUsers = 4;
+                var roomUsers = room.users.map(function(user) {
+                    return {
+                        name: user.name
+                    }
+                });
+
+                var waitingUsers = maxUsers - roomUsers.length;
+
+                room.on('started', function() {
+                    // user has items now
+                    // send the user their items
+                    send('game-start', {
+                        items: user.items
+                    });
+                });
+
+                room.users.forEach(function(user) {
+                    user.send('pre-game', {
                         status:
                             waitingUsers == 0 ?
-                                'setting up game...' :
-                                'waiting on '+(waitingUsers)+' more '+(waitingUsers==1 ? 'user' : 'users')+'...',
+                            'setting up game...' :
+                            'waiting on '+(waitingUsers)+' more '+(waitingUsers==1 ? 'user' : 'users')+'...',
                         users: roomUsers // TODO
                     })
+                });
+
+                if (roomUsers.length === 4) {
+                    room.start();
                 }
             },
 
@@ -124,13 +144,9 @@ socket.on('connection', function(connection) {
         }
     });
     connection.on('close', function() {
-        if (user) {
-            var index = users.indexOf(user);
-            if (index >= 0) {
-                console.log("removing user: ", user);
-                users[index] = users[users.length];
-                users.length--;
-            }
+        if (user && user.room) {
+            user.room.leave(user);
+            room.leave(user);
         }
     });
 });

@@ -25,6 +25,10 @@ $(function() {
                     $('#rooms').show(500);
                 },
 
+                'error': function(command) {
+                    console.error('server error', command.message);
+                },
+
                 'rooms': function(command) {
                     var roomsList = $('#rooms ul');
                     roomsList.empty();
@@ -43,34 +47,23 @@ $(function() {
                     });
                 },
 
-                'game-state': function(command) {
-                    switch (command.state) {
-                        case 'waiting':
-                            $('#rooms').hide(500);
-                            $("#waiting .status").text(command.status);
+                'pre-game': function(command) {
+                    $('#rooms').hide(500);
+                    $("#waiting .status").text(command.status);
 
-                            var userList = $('#waiting ul');
-                            userList.empty();
-                            command.users.forEach(function(user) {
-                                userList.append($('<li></li>').text(user.name))
-                            });
+                    var userList = $('#waiting ul');
+                    userList.empty();
+                    command.users.forEach(function(user) {
+                        userList.append($('<li></li>').text(user.name))
+                    });
 
-                            $('#waiting').show(500);
-                            break;
-                        case 'started':
-                            $('#rooms').hide(500);
-                            $('#waiting').hide(500);
-                            $('#game').show(500);
-                            break;
-                        case 'your-turn':
-                            break;
-                        case 'waiting-turn':
-                            break;
-                        case 'your-offer':
-                            break;
-                        case 'finished':
-                            break;
-                    }
+                    $('#waiting').show(500);
+                },
+
+                'game-start': function(command) {
+                    $('#rooms').hide(500);
+                    $('#waiting').hide(500);
+                    $('#game').show(500);
                 },
 
                 'card-proposed':function(command) {
