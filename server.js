@@ -31,9 +31,9 @@ var socket = sockjs.createServer();
 var users = [];
 
 var rooms = {
-    'catfuck': new Room(),
-    'dogfood': new Room(),
-    'pen island': new Room(),
+    'Artsy Fartsy': new Room(),
+    'One ring to bind them': new Room(),
+    'Pen is Mightier': new Room(),
 };
 
 socket.on('connection', function(connection) {
