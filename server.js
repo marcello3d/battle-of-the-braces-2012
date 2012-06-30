@@ -191,11 +191,16 @@ socket.on('connection', function(connection) {
 
                 room.on('game-over', function() {
                     send('game-complete', {
-                        users:room.users.map(function(usr) {
+                        users: room.users.map(function(usr) {
                             return {
-                                //TODO ...
-//                                score: 250,
-//                                cards: [ full card objects ]
+                                id: usr.id,
+                                items: usr.items.map(function(item) {
+                                    return {
+                                        price: item.price,
+                                        title: item.title,
+                                        url: item.url,
+                                    }
+                                })
                             }
                         })
                     });
