@@ -62,7 +62,6 @@ Room.prototype.start = function() {
             return console.error(new Error('not enough listings'));
         }
 
-        var count = 0;
         var uid = 0;
         var user = self.users[uid];
 
@@ -72,9 +71,8 @@ Room.prototype.start = function() {
             }
 
             // after this user has been assigned 5 items
-            if (count++ >= config.startCardCount) {
+            if (user.items.length >= config.startCardCount) {
                 user = self.users[++uid];
-                count = 0;
             }
 
             // assign items to the users
