@@ -13,6 +13,9 @@ var Room = function(name) {
     self.users = [];
     self.name = name;
 
+    // item id -> item
+    self.items = {};
+
     // first user is first to play
     self.round = 0;
 
@@ -20,12 +23,12 @@ var Room = function(name) {
     self.user_offer;
 
     // items the other users have offered
-    self.offers = [];
+    // user_id -> item
+    self.offers = {};
 
     // first time game is started
     self.once('started', function() {
-        // tell the first user it is their turn
-        self.emit('turn', self.round);
+        self.next_turn();
     });
 };
 util.inherits(Room, EventEmitter);
@@ -84,16 +87,37 @@ Room.prototype.start = function() {
 
                 listing.img = details;
                 user.items.push(listing);
+
+                listing.user = user;
+                self.items[listing.id] = listing;
+
                 next(err);
             });
         })();
     });
 }
 
+Room.prototype.next_turn = function() {
+    var self = this;
+
+    // game over?
+    if (++self.round >= config.maxRounds) {
+        return self.emit('game-over');
+    }
+
+    var idx = self.round % config.maxUsers;
+    self.active_player = self.users[idx];
+    self.user_offer = undefined;
+
+    // next user's term
+    self.emit('turn', self.round, idx);
+};
+
 /// add a user to the room
 Room.prototype.join = function(user) {
     var self = this;
     user.items = [];
+    user.id = self.users.length;
     self.users.push(user);
 };
 
@@ -112,17 +136,20 @@ Room.prototype.leave = function(user) {
 Room.prototype.offer = function(item_id) {
     var self = this;
 
+    var listing = self.items[item_id];
+
     // the item may belong to the turn's user
     // TODO check that the user owns this item
     if (!self.user_offer) {
-        self.user_offer = item_id;
+        self.user_offer = listing;
     }
 
     // user has offered the item
     // other users now need to submit their offerings
-    self.emit('offer', item_id);
+    self.emit('offer', user_id, item_id);
 
-    offers.push(item_id);
+    // offers is user_id -> item
+    offers[listing.user.id] = listing;
 
     if (offers.length >= config.maxUsers - 1) {
         // send the offers so that they will be visible for selection
@@ -134,19 +161,23 @@ Room.prototype.offer = function(item_id) {
 Room.prototype.pick = function(item_id) {
     var self = this;
 
-    // switch the user's proposed item with the selected item
-    // self.user_offer
+    var listing = self.items[item_id];
+    var counter_party = listing.user;
+
+    var player = self.active_player;
+
+    // switch owning user for the items
+    self.user_offer.user = counter_party;
+    listings.user = player;
+
+    // TODO splice out the item from the user
+    player.items;
+    counter_party.items;
 
     // user has picked an offered item
-    self.emit('pick', item_id);
+    self.emit('picked', item_id);
 
-    // game over?
-    if (++self.round >= config.maxRounds) {
-        return self.emit('game-over');
-    }
-
-    // next user's term
-    self.emit('turn', self.round % config.maxUsers);
+    self.next_turn();
 };
 
 module.exports = Room;

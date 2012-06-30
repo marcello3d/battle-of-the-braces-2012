@@ -116,8 +116,48 @@ socket.on('connection', function(connection) {
                     // user has items now
                     // send the user their items
                     send('game-start', {
-                        items: user.items,
+                        user: {
+                            id: user.id,
+                            items: user.items
+                        },
                         users: roomUsers
+                    });
+                });
+
+                room.on('turn', function(round, user_id) {
+                    send('turn', {
+                        round: round,
+                        user: user_id
+                    });
+                });
+
+                room.on('offer', function(user_id, item) {
+
+                    // when a non active player selects a card
+                    // all we know is that that user selected a card
+                    if (room.active_player.id !== user_id) {
+                        return send('card-offered', {
+                            user: user_id
+                        })
+                    }
+
+                    // when the active player selects a card
+                    send('card-proposed', {
+                        user: user_id,
+                        card: {
+                            img: item.img,
+                            title: item.title
+                        }
+                    });
+                });
+
+                room.on('offers', function(offers) {
+                    send('reveal-offerings', offers);
+                });
+
+                room.on('picked', function(item_id) {
+                    send('card-chosen', {
+                        card: item_id
                     });
                 });
 
@@ -137,28 +177,24 @@ socket.on('connection', function(connection) {
             },
 
             'propose-card':function(command) {
-//                {
-//                    card: (card id)
-//                }
+                room.offer(command.card);
             },
 
             'offer-trade':function(command) {
-//                {
-//                    card: (card id)
-//                }
+                room.offer(command.card);
             },
 
             'accept-offer':function(command) {
-//                {
-//                    card: (card id)
-//                }
+                room.pick(command.card);
             }
         };
-        if (commands[json.type]) {
-            commands[json.type](json);
-        } else {
-            sendError('command not recognized: '+json.type);
+
+        var type = commands[json.type];
+        if (!type) {
+            return sendError('command not recognized:', json.type);
         }
+
+        type(json);
     });
     connection.on('close', function() {
         if (user && user.room) {
