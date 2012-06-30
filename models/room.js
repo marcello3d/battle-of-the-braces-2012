@@ -13,8 +13,20 @@ var Room = function(name) {
     self.users = [];
     self.name = name;
 
-    // first user to join is the first to play
-    self.turn = 0;
+    // first user is first to play
+    self.round = 0;
+
+    // offer of the turn user
+    self.user_offer;
+
+    // items the other users have offered
+    self.offers = [];
+
+    // first time game is started
+    self.once('started', function() {
+        // tell the first user it is their turn
+        self.emit('turn', self.round);
+    });
 };
 util.inherits(Room, EventEmitter);
 
@@ -94,6 +106,47 @@ Room.prototype.leave = function(user) {
     }
 
     self.users.splice(index, 1);
+};
+
+// the user is offering up an item for trade
+Room.prototype.offer = function(item_id) {
+    var self = this;
+
+    // the item may belong to the turn's user
+    // TODO check that the user owns this item
+    if (!self.user_offer) {
+        self.user_offer = item_id;
+    }
+
+    // user has offered the item
+    // other users now need to submit their offerings
+    self.emit('offer', item_id);
+
+    offers.push(item_id);
+
+    if (offers.length >= config.maxUsers - 1) {
+        // send the offers so that they will be visible for selection
+        self.emit('offers', offers);
+    }
+};
+
+// the user has selected an offering
+Room.prototype.pick = function(item_id) {
+    var self = this;
+
+    // switch the user's proposed item with the selected item
+    // self.user_offer
+
+    // user has picked an offered item
+    self.emit('pick', item_id);
+
+    // game over?
+    if (++self.round >= config.maxRounds) {
+        return self.emit('game-over');
+    }
+
+    // next user's term
+    self.emit('turn', self.round % config.maxUsers);
 };
 
 module.exports = Room;
