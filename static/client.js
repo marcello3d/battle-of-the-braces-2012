@@ -2,20 +2,32 @@ $(function() {
     var sock = null;
     function connect() {
         sock = new SockJS(location.protocol+"//"+location.host+"/battle");
-        $('#status').text("[connecting...]");
+        $('#status').text("connecting...");
 
-        $('#login').show();
+        $('#login').hide();
         $('#rooms').hide();
         $('#waiting').hide();
         $('#game').hide();
 
         sock.onopen = function() {
             console.log('open');
-            $('#status').text("[online]");
+            $('#status').text("online");
+            $('#login').show();
             if ($('#username').val()) {
                 login();
             }
         };
+
+        // user interaction state
+        var WAITING = 'waiting';
+        var PROPOSE_CARD = 'propose-card';
+        var OFFER_CARD = 'offer-card';
+        var CHOOSE_OFFER = 'choose-offer';
+
+        var state = WAITING;
+        var myUserId;
+        var currentTurnUserId;
+
         sock.onmessage = function(e) {
             var json = JSON.parse(e.data);
             console.log("got message", json);
@@ -51,6 +63,8 @@ $(function() {
                 },
 
                 'pre-game': function(command) {
+                    state = WAITING;
+
                     $('#rooms').hide(500);
                     $("#waiting .status").text(command.status);
 
@@ -62,21 +76,31 @@ $(function() {
                     });
 
                     $('#waiting').show(500);
+
                 },
 
                 'game-start': function(command) {
+                    state = WAITING;
+                    myUserId = command.user.id;
+
                     $('#rooms').hide(500);
                     $('#waiting').hide(500);
                     $('#game').show(500);
 
                     var cards = $('#game ul.your-cards');
                     command.items.forEach(function(item) {
-                        var image = $('<img class="card">').attr('src', item.img.medium);
-                        cards.append($('<li><img/></li>').append(image));
+                        var image = $('<div class="card">' +
+                            '<img>' +
+                            '<div class="title">'+item.title+'</div>' +
+                            '<div class="price"><span class="dollar">$</span>'+Math.ceil(item.price)+'</div>' +
+                            '</div>');
+                        image.find('img').attr('src', item.img.medium).attr('title', image.find(".title").text());
+                        cards.append($('<li></li>').append(image));
                         console.dir(item)
                     });
 
                     var gameUserList = $('#game ul.users');
+                    gameUserList.empty();
                     command.users.forEach(function(user) {
                         if (!user.self) {
                             gameUserList.append($('<li></li>').text(user.name));
@@ -84,23 +108,85 @@ $(function() {
                     });
 
                 },
-                'your-turn' : function(command) {
-
+                'turn' : function(command) {
+//                    {
+//                        round: 1
+//                        user: <id>
+//                    }
+                    currentTurnUserId = command.user;
+                    if (currentTurnUserId == myUserId) {
+                        state = PROPOSE_CARD;
+                    }
                 },
-                'not-turn' : function(command) {
-
+                'card-proposed' : function(command) {
+//                    {
+//                        user: <id>,
+//                        card: { // PROPOSED CARD
+//                            img: {
+//                                ...
+//                            },
+//                            title: ...
+//                        }
+//                    }
+                    state = OFFER_CARD;
                 },
-
-                'card-proposed':function(command) {
-
+                'card-offered' : function(command) {
+//                    {
+//                        user: <id>
+//                        card: { // ONLY IF YOUR TURN
+//                            id: ...
+//                            img: {
+//                                ...
+//                            },
+//                            title: ...
+//                        }
+//                    }
+                    state = WAITING;
                 },
-
-                'trade-offered':function(command) {
-
+                'reveal-offerings' : function(command) {
+//                    {
+//                        cards: { // MAP USER ID -> OFFERED CARDS
+//                          0: {
+//                              id: ...
+//                              img: {
+//                                    ...
+//                              },
+//                              title: ...
+//                          }
+//                          2: {
+//                              id: ...
+//                              img: {
+//                                    ...
+//                              },
+//                              title: ...
+//                          }
+//                          3: {
+//                              id: ...
+//                              img: {
+//                                    ...
+//                              },
+//                              title: ...
+//                         }
+//                    }
+                    if (myTurn) {
+                        state = CHOOSE_OFFER;
+                    }
                 },
-
-                'trade-accepted':function(command) {
-
+                'card-chosen' : function(command) {
+//                    {
+//                        card: (user id)
+//                    }
+                },
+                'game-complete': function(command) {
+//                    {
+//                        users: [
+//                            {
+//                                score: 250,
+//                                cards: [ full card objects ]
+//                            },
+//                            ...
+//                        ]
+//                    }
                 }
             };
             if (commands[json.type]) {
@@ -110,9 +196,12 @@ $(function() {
             }
         };
         sock.onclose = function() {
-            $('#status').text("[offline]");
+            $('#status').text("offline");
             console.log('closed, reconnecting...');
-            setTimeout(connect, 1500);
+            setTimeout(function() {
+                $('#status').text("reconnecting...");
+                connect();
+            }, 1500);
         };
     }
     connect();

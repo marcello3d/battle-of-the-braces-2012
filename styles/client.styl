@@ -2,13 +2,17 @@ body {
   color: white;
   background: black;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 20px;
+  font-size: 25px;
   font-weight: 100;
   letter-spacing: 1px;
 }
 #status {
   position: absolute;
-
+  top: 20px;
+  right: 20px;
+  background: white;
+  color: black;
+  padding: 5px;
 }
 h1 {
   font-size: 90px;
@@ -29,4 +33,28 @@ a {
 .your-cards li {
   list-style: none;
   float: left;
+}
+.card {
+  background: white;
+  color: black;
+  padding: 10px;
+  margin: 5px;
+  border-radius: 3px;
+  img {
+    margin-bottom: 2px;
+    border-radius: 3px;
+  }
+  div {
+    margin-bottom: -6px;
+  }
+  .title {
+    font-size: 10px;
+    width: 165px;
+  }
+  .price {
+    text-align: right;
+    .dollar {
+      font-size: 70%;
+    }
+  }
 }

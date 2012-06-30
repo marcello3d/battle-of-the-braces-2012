@@ -137,15 +137,21 @@ socket.on('connection', function(connection) {
             },
 
             'propose-card':function(command) {
-
+//                {
+//                    card: (card id)
+//                }
             },
 
             'offer-trade':function(command) {
-
+//                {
+//                    card: (card id)
+//                }
             },
 
             'accept-offer':function(command) {
-
+//                {
+//                    card: (card id)
+//                }
             }
         };
         if (commands[json.type]) {
