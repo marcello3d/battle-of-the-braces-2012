@@ -5,7 +5,7 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 
 // local
-var etsy = require('../lib/etsy');
+var Listing = require('./listing');
 var config = require('../config.js');
 
 var Room = function() {
@@ -51,18 +51,17 @@ Room.prototype.start = function() {
     }
 
     // load possible items
-    etsy.active_listings(function(err, listings) {
+    var listingCount = config.maxUsers * config.startCardCount;
+    Listing.random(listingCount, function(err, listings) {
         if (err) {
             // ??
             return console.error(err);
         }
 
-        var listingCount = config.maxUsers * config.startCardCount;
         if (listings.length < listingCount) {
             return console.error(new Error('not enough listings'));
         }
 
-        listings = listings.slice(0, listingCount);
         var count = 0;
         var uid = 0;
         var user = self.users[uid];
@@ -89,7 +88,7 @@ Room.prototype.start = function() {
             }
 
             // load the images for the listing
-            etsy.image_url(listing.id, function(err, details) {
+            Listing.image_url(listing.id, function(err, details) {
                 if (err) {
                     return next(err);
                 }
