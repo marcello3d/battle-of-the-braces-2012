@@ -70,7 +70,8 @@ socket.on('connection', function(connection) {
                             name: room_name,
                             users: room.users.map(function(user) {
                                 return {
-                                    name: user.name
+                                    name: user.name,
+                                    self: user.name === command.username
                                 }
                             })
                         };
@@ -95,9 +96,10 @@ socket.on('connection', function(connection) {
                 user.room = room;
 
                 var maxUsers = config.maxUsers;
-                var roomUsers = room.users.map(function(user) {
+                var roomUsers = room.users.map(function(usr) {
                     return {
-                        name: user.name
+                        name: usr.name,
+                        self: usr.name === user.name
                     }
                 });
 
