@@ -31,9 +31,19 @@ $(function() {
         var currentTurnUserId;
         var currentOfferCount;
 
-        function instructions(title, message) {
-            $('#instruction b').text(title);
-            $('#instruction span').text(" "+message);
+        function instructions(title, message, waiting) {
+            var instruction = $('#instruction');
+            function show() {
+                instruction.toggleClass("waiting", !!waiting);
+                $('#instruction b').text(title||'');
+                $('#instruction span').text(" "+(message||''));
+                instruction.show(250);
+            }
+            if (waiting) {
+                show();
+            } else {
+                instruction.stop().hide(250, show);
+            }
         }
 
         function userName(id) {
@@ -85,6 +95,7 @@ $(function() {
                             join();
                         }
                     });
+                    $('.card').remove();
                 },
 
                 'pre-game': function(command) {
@@ -102,8 +113,9 @@ $(function() {
                         userList.append($('<li></li>').text(user.name).toggleClass('you',user.self));
                     });
 
-                    $('#waiting').show(500);
+                    $('.card').remove();
 
+                    $('#waiting').show(500);
                 },
 
                 'game-start': function(command) {
@@ -115,7 +127,7 @@ $(function() {
                     $('#game').show(500);
 
                     var cards = $('#game .your-cards');
-                    cards.empty();
+                    cards.find('div').remove();
                     myCards = command.user.items;
                     myCards.forEach(function(item) {
                         var div = $('<div class="card">' +
@@ -136,23 +148,15 @@ $(function() {
                         var div = $('<div class="player"></div>');
                         div.text(userName(userId));
                         for (var i=0; i<myCards.length; i++) {
-                            div.append($('<div class="other-card">' +
+                            div.append($('<div class="card other-card">' +
                                 'Unknown card'+
                                 '</div>'));
                         }
                     });
 
-                    var gameUserList = $('#game ul.users');
-                    gameUserList.empty();
-
                     var playerNumber = 1;
                     Object.keys(users).forEach(function(userId) {
-                        var user = users[userId];
-                        user.number = playerNumber++;
-
-                        if (userId != myUserId) {
-                            gameUserList.append($('<li></li>').text(user.name));
-                        }
+                        users[userId].number = playerNumber++;
                     });
                 },
                 'turn' : function(command) {
@@ -163,23 +167,20 @@ $(function() {
                     currentTurnUserId = command.user;
                     if (currentTurnUserId == myUserId) {
                         state = PROPOSE_CARD;
-                        instructions("Your turn, "+userName(myUserId),
-
-                            "You must choose a card to trade.");
+                        instructions("Your turn, "+userName(myUserId), "You must choose a card to trade.");
                         enableClicking(function(card) {
-                            instructions("Please wait...", "The other players are selecting cards to trade...");
+                            instructions("Please wait...", "The other players are selecting cards to trade...", true);
 
                             send('propose-card', {
                                 card: card.id
                             });
-                            card.div.animate({
-                                left:((window.innerWidth - card.div.width())/2)+"px",
-                                top:((window.innerHeight - card.div.height())/2)+"px",
-                                position:'absolute'
+                            card.div.hide(500,function(){
+                                card.div.remove();
+                                $('#game .table-proposed').append(card.div.hide().show(500));
                             });
                         });
                     } else {
-                        instructions("Please wait.", userName(currentTurnUserId)+" is selecting a card");
+                        instructions("Please wait.", userName(currentTurnUserId)+" is selecting a card", true);
                     }
                     currentOfferCount = 0;
                 },
@@ -195,38 +196,30 @@ $(function() {
 //                    }
                     // Current player has made offer
                     // TODO: animate in the current player's card
-
-                    var item = command.card;
-
-                    var div = $('<div class="card offered">' +
-                        '<img>' +
-                        '<div class="title">'+item.title+'</div>' +
-                        '</div>');
-                    div.find('img').attr('src', item.img.medium).attr('title', div.find(".title").text());
-                    $('#game .table-center').append(div);
-                    item.div = div;
-
                     if (currentTurnUserId != myUserId) {
                         state = OFFER_CARD;
                         instructions("Trade time!",
                             "You must offer a card to trade with " + userName(currentTurnUserId) + ".");
 
+                        var item = command.card;
+
+                        var div = $('<div class="card proposed-card">' +
+                            '<img>' +
+                            '<div class="title">'+item.title+'</div>' +
+                            '</div>');
+                        div.find('img').attr('src', item.img.medium).attr('title', div.find(".title").text());
+                        $('#game .table-proposed').append(div.hide().show(500));
+                        item.div = div;
 
                         enableClicking(function(card) {
-                            instructions("Please wait...", "Others to offer their cards");
+                            instructions("Please wait...", "Others to offer their cards", true);
 
                             send('offer-trade', {
                                 card: card.id
                             });
-                            var padding = 20;
-                            var paddedCard = card.div.width()+padding*2;
-                            card.div.animate({
-                                left:((window.innerWidth - paddedCard * 3)/2 +
-                                    paddedCard * currentOfferCount +
-                                    padding)+"px",
-                                top:((window.innerHeight - card.div.height())/2
-                                    - card.div.height()*1.5)+"px",
-                                position:'absolute'
+
+                            card.div.hide(500,function() {
+                                card.div.remove();
                             });
                             currentOfferCount++;
                         });
@@ -239,9 +232,9 @@ $(function() {
 
                     // A player has made an offer to the current player
                     // TODO animate in blank card for that player
-                    $('#game .table-center').append($('<div class="other-card">' +
-                            'Unknown card'+
-                            '</div>'));
+                    $('#game .table-offered').append($('<div class="card other-card">' +
+                            '<div>etsy*trade</div>'+
+                            '</div>').hide().show(500));
                 },
                 'reveal-offerings' : function(command) {
 //                    {
@@ -274,8 +267,8 @@ $(function() {
                     // TODO animate cards flip over
 
 
-                    var tableCenter = $("#game .table-center")
-                    tableCenter.empty();
+                    var tableCenter = $("#game .table-offered")
+                    tableCenter.find('div').remove();
                     Object.keys(command.cards).forEach(function(key) {
                         var card = command.cards[key];
                         var div = $('<div class="card offered">' +
@@ -289,7 +282,7 @@ $(function() {
                                 send('accept-offer', { card: card.id });
                                 tableCenter.removeClass('selectable');
                                 div.off('click');
-                                instructions("Please wait...",'');
+                                instructions("Please wait...",'',true);
                             });
                         }
                     });
@@ -299,7 +292,7 @@ $(function() {
                         instructions("Select a card", "You must choose a card to trade with.");
                         tableCenter.addClass('selectable');
                     } else {
-                        instructions("Please wait...", userName(currentTurnUserId)+" is selecting a trade...");
+                        instructions("Please wait...", userName(currentTurnUserId)+" is selecting a trade...",true);
                     }
                 },
                 'card-chosen' : function(command) {
@@ -308,6 +301,7 @@ $(function() {
 //                    }
                     // TODO animate selected card to current player
                     // TODO animate other cards to various players
+                    instructions("Card selected!");
                 },
                 'game-complete': function(command) {
 //                    {
@@ -326,7 +320,7 @@ $(function() {
                     $('#rooms').show(500);
                     $('#waiting').hide(500);
                     $('#game').hide(500);
-                    location.hash = "";
+                    window.location = location.toString();
                 }
             };
             if (commands[json.type]) {

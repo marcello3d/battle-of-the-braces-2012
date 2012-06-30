@@ -142,6 +142,7 @@ socket.on('connection', function(connection) {
 
                 room.on('leave', function() {
                     send('game-cancelled');
+                    delete user.room;
                     room.reset();
                     room.removeAllListeners();
                 });
@@ -185,6 +186,18 @@ socket.on('connection', function(connection) {
                 room.on('picked', function(item_id) {
                     send('card-chosen', {
                         card: item_id
+                    });
+                });
+
+                room.on('game-over', function() {
+                    send('game-complete', {
+                        users:room.users.map(function(usr) {
+                            return {
+                                //TODO ...
+//                                score: 250,
+//                                cards: [ full card objects ]
+                            }
+                        })
                     });
                 });
 

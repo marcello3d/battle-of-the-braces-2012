@@ -1,5 +1,5 @@
 module.exports = {
     maxUsers: 3,
     startCardCount: 5,
-    maxRounds: 2
+    maxRounds: 6
 };
