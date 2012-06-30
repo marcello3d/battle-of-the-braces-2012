@@ -8,10 +8,23 @@ var util = require('util');
 var etsy = require('../lib/etsy');
 var config = require('../config.js');
 
-var Room = function(name) {
+var Room = function() {
     var self = this;
     self.users = [];
-    self.name = name;
+
+    self.reset();
+};
+util.inherits(Room, EventEmitter);
+
+Room.prototype.reset = function() {
+    var self = this;
+
+    self.users.forEach(function(user) {
+        delete user.id;
+        delete user.items;
+    });
+
+    self.users = [];
 
     // item id -> item
     self.items = {};
@@ -26,14 +39,13 @@ var Room = function(name) {
     // user_id -> item
     self.offers = {};
 };
-util.inherits(Room, EventEmitter);
 
 /// initialize a game room
 Room.prototype.start = function() {
 
     var self = this;
 
-    // why are there not 4 users??
+    // why are there not enough users??
     if (self.users.length !== config.maxUsers) {
         return;
     }
@@ -128,6 +140,7 @@ Room.prototype.leave = function(user) {
     }
 
     self.users.splice(index, 1);
+    self.emit('leave');
 };
 
 // the user is offering up an item for trade

@@ -142,9 +142,7 @@ socket.on('connection', function(connection) {
 
                 room.on('leave', function() {
                     send('game-cancelled');
-
-                    // reset the room
-                    rooms[command.name] = new Room();
+                    room.reset();
                 });
 
                 room.on('offer', function(user_id, item) {
