@@ -105,14 +105,20 @@ socket.on('connection', function(connection) {
                 // TODO: send updated room info to non-roomed users
 
                 var maxUsers = config.maxUsers;
-                var roomUsers = room.users.map(function(usr) {
-                    return {
-                        name: usr.name,
-                        self: usr.name === user.name
-                    }
-                });
 
-                var waitingUsers = maxUsers - roomUsers.length;
+                function getUsers() {
+                    var roomUsers = {};
+                    Object.keys(room.users).forEach(function(userId) {
+                        roomUsers[userId] = {
+                            name: room.users[userId].name
+                        }
+                    });
+                    return roomUsers;
+                }
+
+                var roomUsers = getUsers();
+
+                var waitingUsers = maxUsers - Object.keys(roomUsers).length;
 
                 room.on('started', function() {
                     // user has items now
@@ -129,7 +135,7 @@ socket.on('connection', function(connection) {
                                 }
                             })
                         },
-                        users: roomUsers
+                        users: getUsers()
                     });
                 });
 
@@ -198,7 +204,7 @@ socket.on('connection', function(connection) {
                                     return {
                                         price: item.price,
                                         title: item.title,
-                                        url: item.url,
+                                        url: item.url
                                     }
                                 })
                             }
@@ -212,11 +218,11 @@ socket.on('connection', function(connection) {
                             waitingUsers == 0 ?
                             'Setting up game...' :
                             'Waiting on '+(waitingUsers)+' more '+(waitingUsers==1 ? 'user' : 'users')+'...',
-                        users: roomUsers
+                        users: getUsers()
                     })
                 });
 
-                if (roomUsers.length === maxUsers) {
+                if (Object.keys(roomUsers).length === maxUsers) {
                     room.start();
                 }
             },

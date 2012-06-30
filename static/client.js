@@ -294,6 +294,9 @@ $(function() {
                     // TODO animate selected card to current player
                     // TODO animate other cards to various players
                     instructions("Card selected!");
+
+                    $('.table-offered .card').hide(500);
+                    $('.table-proposed .card').hide(500);
                 },
                 'game-complete': function(command) {
 //                    {
