@@ -31,7 +31,9 @@ var socket = sockjs.createServer();
 var users = [];
 
 var rooms = {
-    'catfuck': new Room()
+    'catfuck': new Room(),
+    'dogfood': new Room(),
+    'pen island': new Room(),
 };
 
 socket.on('connection', function(connection) {
@@ -136,6 +138,13 @@ socket.on('connection', function(connection) {
                         round: round,
                         user: user_id
                     });
+                });
+
+                room.on('leave', function() {
+                    send('game-cancelled');
+
+                    // reset the room
+                    rooms[command.name] = new Room();
                 });
 
                 room.on('offer', function(user_id, item) {
