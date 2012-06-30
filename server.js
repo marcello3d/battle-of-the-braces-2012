@@ -27,11 +27,14 @@ var socket = sockjs.createServer();
 
 var users = [];
 
+var rooms = [];
+
 socket.on('connection', function(connection) {
     function send(type, command) {
-        command |= {};
+        command = command || {};
         command.type = type;
         connection.write(JSON.stringify(command));
+        console.log("sending")
     }
     function sendError(message) {
         send('error', { message:'message'});
@@ -45,27 +48,37 @@ socket.on('connection', function(connection) {
         var commands = {
            'login': function(command) {
                 if (user) {
-                    sendError("already logged in")
+                    sendError("already logged in");
                 } else {
-                    user.username = command.username;
+                    user = {
+                        username:command.username
+                    };
                     users.push(user);
+                    console.log("user logged in: ", user);
                     send('login-ok');
-                    send('game-state', {
-                        state: 'lobby',
-                        rooms: [] // TODO
-                    })
+                    send('rooms', {
+                        rooms: rooms.map(function(room) {
+                            // Only send relevant data to the client
+                            return {
+                                name:room.name,
+                                users:[] // TODO
+                            };
+                        })
+                    });
+                    send('game-state', { state: 'lobby' });
                 }
             },
 
-            'roomlist': function(command) {
-
-            },
-
             'join':function(command) {
-                send('game-state', {
-                    state: 'waiting',
-                    currentUsers: [] // TODO
-                })
+                if (user.room) {
+                    sendError("You're already in a room");
+                } else {
+                    user.room = command.id;
+                    send('game-state', {
+                        state: 'waiting',
+                        currentUsers: [] // TODO
+                    })
+                }
             },
 
             'propose-card':function(command) {
@@ -80,16 +93,20 @@ socket.on('connection', function(connection) {
 
             }
         };
-        if (commands[message.type]) {
-            commands[message.type](message);
+        if (commands[json.type]) {
+            commands[json.type](json);
         } else {
-            sendError('command not recognized: '+message.type);
+            sendError('command not recognized: '+json.type);
         }
     });
     connection.on('close', function() {
         if (user) {
             var index = users.indexOf(user);
-            users[index] = users[users.length]
+            if (index >= 0) {
+                console.log("removing user: ", user);
+                users[index] = users[users.length];
+                users.length--;
+            }
         }
     });
 });
