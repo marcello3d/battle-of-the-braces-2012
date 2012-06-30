@@ -27,7 +27,9 @@ $(function() {
         var state = WAITING;
         var myUserId;
         var users;
+        var myCards;
         var currentTurnUserId;
+        var currentOfferCount;
 
         function instructions(title, message) {
             $('#instruction b').text(title);
@@ -36,6 +38,41 @@ $(function() {
 
         function userName(id) {
             return "Player "+users[id].number+" ("+users[id].name+")";
+        }
+
+        function enableClicking() {
+            $('#game .your-cards').addClass('selectable');
+            myCards.forEach(function(card) {
+                card.div.on("click", function() {
+                    if (currentTurnUserId == myUserId) {
+                        send('propose-card', {
+                            card: card.id
+                        });
+                        card.animate({
+                            left:((window.innerWidth - card.width())/2)+"px",
+                            top:((window.innerHeight - card.height())/2)+"px"
+                        })
+                    } else {
+                        send('offer-trade', {
+                            card: card.id
+                        });
+                        var padding = 20;
+                        var paddedCard = card.width()+padding*2;
+                        card.animate({
+                            left:((window.innerWidth - paddedCard * 3)/2 +
+                                paddedCard * currentOfferCount +
+                                padding)+"px",
+                            top:((window.innerHeight - card.height())/2
+                                - card.height()*1.5)+"px"
+                        });
+                        currentOfferCount++;
+                    }
+                    $('#game .your-cards').removeClass('selectable');
+                    myCards.forEach(function(card) {
+                        card.div.off("click");
+                    });
+                });
+            });
         }
 
         sock.onmessage = function(e) {
@@ -101,15 +138,16 @@ $(function() {
 
                     var cards = $('#game ul.your-cards');
                     cards.empty();
-                    command.user.items.forEach(function(item) {
-                        var image = $('<div class="card">' +
+                    myCards = command.user.items;
+                    myCards.forEach(function(item) {
+                        var div = $('<div class="card">' +
                             '<img>' +
                             '<div class="title">'+item.title+'</div>' +
                             '<div class="price"><span class="dollar">$</span>'+Math.ceil(item.price)+'</div>' +
                             '</div>');
-                        image.find('img').attr('src', item.img.medium).attr('title', image.find(".title").text());
-                        cards.append($('<li></li>').append(image));
-                        console.dir(item)
+                        div.find('img').attr('src', item.img.medium).attr('title', div.find(".title").text());
+                        cards.append($('<li></li>').append(div));
+                        item.div = div;
                     });
 
                     users = command.users;
@@ -136,14 +174,13 @@ $(function() {
                     if (currentTurnUserId == myUserId) {
                         state = PROPOSE_CARD;
                         instructions("Your turn, "+userName(myUserId),
+
                             "You must choose a card to trade.");
-
-                        // TODO Enable clicking of cards to propose card
-
+                        enableClicking();
                     } else {
-                        instructions(userName(currentTurnUserId)+" is selecting a card",
-                            "");
+                        instructions("Please wait.", userName(currentTurnUserId)+" is selecting a card");
                     }
+                    currentOfferCount = 0;
                 },
                 'card-proposed' : function(command) {
 //                    {
@@ -162,7 +199,7 @@ $(function() {
                     instructions("Trade time!",
                         "You must offer a card to trade with " + userName(currentTurnUserId) + ".");
 
-                    // TODO Enable clicking of cards to offer trade
+                    enableClicking();
                 },
                 'card-offered' : function(command) {
 //                    {
@@ -223,6 +260,12 @@ $(function() {
 //                    }
                     // TODO show scores
                     // TODO Flip all cards
+                },
+                'game-cancelled': function(command) {
+                    $('#rooms').show(500);
+                    $('#waiting').hide(500);
+                    $('#game').hide(500);
+                    location.hash = "";
                 }
             };
             if (commands[json.type]) {

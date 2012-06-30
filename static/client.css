@@ -42,9 +42,11 @@ a {
   margin: 5px;
   border-radius: 3px;
   opacity: 0.8;
+  -webkit-transform: translate(0, 0);
+  -moz-transform: translate(0, 0);
   transform: translate(0, 0);
-  -webkit-transition: opacity 250ms, transform 250ms;
-  -moz-transition: opacity 250ms, transform 250ms;
+  -webkit-transition: opacity 250ms, -webkit-transform 250ms;
+  -moz-transition: opacity 250ms, -moz-transform 250ms;
   transition: opacity 250ms, transform 250ms;
 }
 .card img {
@@ -64,9 +66,14 @@ a {
 .card .price .dollar {
   font-size: 70%;
 }
-.card:hover {
-  opacity: 1;
-  transform: translate(0, -10px);
+.your-cards.selectable .card {
+  cursor: pointer;
+}
+.your-cards.selectable .card:hover {
+  opacity: 0.9;
+  -webkit-transform: translate(0, -20px);
+  -moz-transform: translate(0, -20px);
+  transform: translate(0, -20px);
 }
 .flippable-wrapper-wrapper {
   display: block;

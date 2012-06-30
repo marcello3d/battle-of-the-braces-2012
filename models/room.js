@@ -157,14 +157,14 @@ Room.prototype.offer = function(item_id) {
 
     // user has offered the item
     // other users now need to submit their offerings
-    self.emit('offer', user_id, item_id);
+    self.emit('offer', listing.user.id, listing.id);
 
     // offers is user_id -> item
-    offers[listing.user.id] = listing;
+    self.offers[listing.user.id] = listing;
 
-    if (offers.length >= config.maxUsers - 1) {
+    if (Object.keys(self.offers).length >= config.maxUsers - 1) {
         // send the offers so that they will be visible for selection
-        self.emit('offers', offers);
+        self.emit('offers', self.offers);
     }
 };
 

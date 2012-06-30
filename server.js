@@ -143,6 +143,7 @@ socket.on('connection', function(connection) {
                 room.on('leave', function() {
                     send('game-cancelled');
                     room.reset();
+                    room.removeAllListeners();
                 });
 
                 room.on('offer', function(user_id, item) {
@@ -166,7 +167,17 @@ socket.on('connection', function(connection) {
                 });
 
                 room.on('offers', function(offers) {
-                    send('reveal-offerings', offers);
+                    var cleanedOffers = {};
+                    Object.keys(offers).forEach(function (key) {
+                        var listing = offers[key];
+                        cleanedOffers[key] = {
+                            id:listing.id,
+                            img:listing.img,
+                            title:listing.title
+                        };
+                    });
+
+                    send('reveal-offerings', cleanedOffers);
                 });
 
                 room.on('picked', function(item_id) {
