@@ -196,10 +196,31 @@ socket.on('connection', function(connection) {
                 });
 
                 room.on('game-over', function() {
+
+                    var winner;
+                    room.users.forEach(function(user) {
+                        var total = 0;
+                        user.items.forEach(function(item) {
+                            total += item.price;
+                        });
+
+                        user.score = total;
+
+                        if (!winner || total > winner.score) {
+                            winner = {
+                                id: user.id,
+                                score: total,
+                            };
+                            return;
+                        }
+                    });
+
                     send('game-complete', {
+                        winner: winner,
                         users: room.users.map(function(usr) {
                             return {
                                 id: usr.id,
+                                score: usr.score,
                                 items: usr.items.map(function(item) {
                                     return {
                                         price: item.price,
