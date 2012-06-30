@@ -1,0 +1,19 @@
+{
+    "name": "battle",
+    "private": true,
+    "version": "0.0.0",
+    "author": [
+        "Marcello Bastéa-Forte <marcello@cellosoft.com> (http://marcello.cellosoft.com/)",
+        "Roman Shtylman (http://shtylman.com/)"
+    ],
+    "dependencies": {
+        "canvas": "*",
+        "express":"3.0.0beta4",
+        "hbs":"*",
+        "sockjs": "*",
+        "stylus":"*"
+    },
+    "engines": {
+        "node": "*"
+    }
+}
