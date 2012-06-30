@@ -47,6 +47,24 @@ socket.on('connection', function(connection) {
 
     var user;
 
+    function sendRooms() {
+        send('rooms', {
+            rooms: Object.keys(rooms).map(function(room_name) {
+                var room = rooms[room_name];
+                // Only send relevant data to the client
+                return {
+                    name: room_name,
+                    users: room.users.map(function(roomUser) {
+                        return {
+                            name: roomUser.name,
+                            self: roomUser.name === user.username
+                        }
+                    })
+                };
+            })
+        });
+    }
+
     connection.on('data', function(message) {
         var json = JSON.parse(message);
         console.log("got message", message);
@@ -62,21 +80,8 @@ socket.on('connection', function(connection) {
 
                 console.log("user logged in: ", user);
                 send('login-ok');
-                send('rooms', {
-                    rooms: Object.keys(rooms).map(function(room_name) {
-                        var room = rooms[room_name];
-                        // Only send relevant data to the client
-                        return {
-                            name: room_name,
-                            users: room.users.map(function(user) {
-                                return {
-                                    name: user.name,
-                                    self: user.name === command.username
-                                }
-                            })
-                        };
-                    })
-                });
+                sendRooms();
+                // TODO: lobby user list?
             },
 
             'error': function(command) {
@@ -95,6 +100,8 @@ socket.on('connection', function(connection) {
                 room.join(user);
                 user.room = room;
 
+                // TODO: send updated room info to non-roomed users
+
                 var maxUsers = config.maxUsers;
                 var roomUsers = room.users.map(function(usr) {
                     return {
@@ -109,7 +116,8 @@ socket.on('connection', function(connection) {
                     // user has items now
                     // send the user their items
                     send('game-start', {
-                        items: user.items
+                        items: user.items,
+                        users: roomUsers
                     });
                 });
 
@@ -119,7 +127,7 @@ socket.on('connection', function(connection) {
                             waitingUsers == 0 ?
                             'setting up game...' :
                             'waiting on '+(waitingUsers)+' more '+(waitingUsers==1 ? 'user' : 'users')+'...',
-                        users: roomUsers // TODO
+                        users: roomUsers
                     })
                 });
 
@@ -149,8 +157,9 @@ socket.on('connection', function(connection) {
     connection.on('close', function() {
         if (user && user.room) {
             user.room.leave(user);
-            room.leave(user);
+            // TODO: send updated room info to non-roomed users
         }
+        // TODO: lobby user list?
     });
 });
 

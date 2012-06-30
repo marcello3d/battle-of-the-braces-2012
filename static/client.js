@@ -40,6 +40,9 @@ $(function() {
                         }
                         var li = $('<li><a href="#"></a></li>');
                         li.find('a').text(room.name).on('click', join);
+                        li.append($('<span></span>').text(" — "+room.users.map(function(user) {
+                            return user.name
+                        }).join(", ")));
                         roomsList.append(li);
                         if (room.name == location.hash.slice(1)) {
                             join();
@@ -53,11 +56,9 @@ $(function() {
 
                     var userList = $('#waiting ul');
                     userList.empty();
-                    var gameUserList = $('#game ul.users');
                     var username = $('#username').val();
                     command.users.forEach(function(user) {
-                        userList.append($('<li></li>').text(user.name).toggleClass('you',user.name == username));
-                        gameUserList.append($('<li></li>').text(user.name).toggleClass('you',user.name == username));
+                        userList.append($('<li></li>').text(user.name).toggleClass('you',user.self));
                     });
 
                     $('#waiting').show(500);
@@ -70,9 +71,24 @@ $(function() {
 
                     var cards = $('#game ul.your-cards');
                     command.items.forEach(function(item) {
-                        cards.append($('<li><img/></li>').append($('<img>').attr('src', item.img.medium)));
+                        var image = $('<img class="card">').attr('src', item.img.medium);
+                        cards.append($('<li><img/></li>').append(image));
                         console.dir(item)
-                    })
+                    });
+
+                    var gameUserList = $('#game ul.users');
+                    command.users.forEach(function(user) {
+                        if (!user.self) {
+                            gameUserList.append($('<li></li>').text(user.name));
+                        }
+                    });
+
+                },
+                'your-turn' : function(command) {
+
+                },
+                'not-turn' : function(command) {
+
                 },
 
                 'card-proposed':function(command) {
