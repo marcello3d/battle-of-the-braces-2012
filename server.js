@@ -52,11 +52,11 @@ socket.on('connection', function(connection) {
     Object.keys(rooms).forEach(function(room_name) {
         var room = rooms[room_name];
         room.on('join', function(user) {
-            send('join', { user: { name: user.name }});
+            sendRooms();
         });
 
         room.on('leave', function(user) {
-            send('leave', { user: { name: user.name }});
+            sendRooms();
         });
     });
 
