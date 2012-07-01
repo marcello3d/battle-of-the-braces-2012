@@ -74,7 +74,8 @@ socket.on('connection', function(connection) {
                         }
                     })
                 };
-            })
+            }),
+            maxUsers: config.maxUsers
         });
     }
 
@@ -109,13 +110,17 @@ socket.on('connection', function(connection) {
                 if (!room) {
                     return sendError('No room!!');
                 }
+                var maxUsers = config.maxUsers;
+
+                if (Object.keys(room.users).length >= maxUsers) {
+                    return sendError("Not enough room!");
+                }
 
                 room.join(user);
                 user.room = room;
 
                 // TODO: send updated room info to non-roomed users
 
-                var maxUsers = config.maxUsers;
 
                 function getUsers() {
                     var roomUsers = {};

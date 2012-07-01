@@ -83,11 +83,11 @@ $(function() {
                         }
                         var li = $('<li><a href="#"></a></li>');
                         li.find('a').text(room.name).on('click', join);
-                        li.append($('<span></span>').text(" — "+(
+                        li.append($('<span></span>').text(" — ("+room.users.length+"/"+command.maxUsers+") "+(
                             room.users.length ?
-                                room.users.map(function(user) {
+                                " — " + room.users.map(function(user) {
                                 return user.name
-                            }).join(", ") : "Empty")));
+                            }).join(", ") : "")));
                         roomsList.append(li);
                         if (room.name == location.hash.slice(1)) {
                             join();
@@ -289,7 +289,7 @@ $(function() {
                             '<div class="title">'+card.title+'</div>' +
                             '</div>');
                         div.find('img').attr('src', card.img.medium).attr('title', div.find(".title").text());
-                        tableCenter.append(div);
+                        tableCenter.append(div.hide().show(500));
                         if (currentTurnUserId == myUserId) {
                             div.on('click', function() {
                                 send('accept-offer', { card: card.id });
