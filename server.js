@@ -237,6 +237,7 @@ socket.on('connection', function(connection) {
                                     return {
                                         price: item.price,
                                         title: item.title,
+                                        img: item.img,
                                         url: item.url
                                     }
                                 })

@@ -8,11 +8,13 @@ $(function() {
         $('#rooms').hide();
         $('#waiting').hide();
         $('#game').hide();
+        $('#end').hide();
 
         sock.onopen = function() {
             console.log('open');
             $('#status').text("online");
             $('#login').show();
+            $('#end').hide();
             if ($('#username').val()) {
                 login();
             }
@@ -359,6 +361,10 @@ $(function() {
 
                     $('.table-offered .card').hide(500);
                     $('.table-proposed .card').hide(500);
+                    setTimeout(function() {
+                        $('.table-offered .card').remove();
+                        $('.table-proposed .card').remove();
+                    }, 400);
                 },
                 'game-complete': function(command) {
 //                    {
@@ -374,23 +380,47 @@ $(function() {
                     // TODO Flip all cards
                     instructions("Game over!");
                     $('#game').hide(500);
-                    $('#winners .status').text(userName(command.winner.id)+" wins!");
-                    $('#winners').show(500);
-                    var winner = command.users[command.winner.id];
-                    populateUser($('#winner .winner'));
-                    Object.keys(command.users).forEach(function(userId) {
-                        var user = users[userId];
-                    });
-                    function populateUser(div) {
+                    var winnerId = command.winner.id;
+                    $('#end .status').text(userName(winnerId)+" wins!");
 
+                    $('#end .winner').empty();
+                    $('#end .losers').empty();
+
+
+                    var winner = command.users[winnerId];
+                    populateUser($('#end .winner'), winnerId, winner);
+
+                    Object.keys(command.users).forEach(function(userId) {
+                        if (userId != command.winner.id) {
+                            var div = $('<div class="profile loser"></div>');
+                            $('#end .losers').append(div);
+                            populateUser(div, userId, command.users[userId]);
+                        }
+                    });
+                    function populateUser(userDiv, userId, user) {
+                        userDiv.append($('<h2></h2>').text(userName(userId)+" — Final score: $"+Math.ceil(user.score)));
+                        user.items.forEach(function(item) {
+
+                            var div = $('<div class="card">' +
+                                '<img>' +
+                                '<div class="title">'+item.title+'</div>' +
+                                '<div class="price"><span class="dollar">$</span>'+Math.ceil(item.price)+'</div>' +
+                                '</div>');
+                            div.find('img').attr('src', item.img.medium).attr('title', div.find(".title").text());
+                            div.on('click',function() {
+                                window.open(item.url, "_blank");
+                            });
+                            userDiv.append(div);
+                        })
                     }
 
-
+                    $('#end').show(500);
                 },
                 'game-cancelled': function(command) {
                     $('#rooms').show(500);
                     $('#waiting').hide(500);
                     $('#game').hide(500);
+                    $('#end').hide(500);
                     window.location = location.toString();
                 }
             };

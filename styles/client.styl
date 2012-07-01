@@ -47,7 +47,7 @@ a {
 }
 
 .card {
-  display: inline-block;
+  display: inline-block !important;
   background: white;
   color: black;
   width: 170px;
@@ -121,6 +121,22 @@ a {
 }
 .table-offered {
   float: left;
+}
+
+.profile .card {
+  opacity: 0.8;
+  cursor: pointer;
+}
+
+.profile .card:hover {
+  opacity: 0.99;
+}
+
+#end .status {
+  margin: 40px 0;
+}
+#end .profile {
+  margin-bottom: 40px;
 }
 
 .selectable {
