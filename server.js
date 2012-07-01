@@ -69,8 +69,7 @@ socket.on('connection', function(connection) {
                     name: room_name,
                     users: room.users.map(function(roomUser) {
                         return {
-                            name: roomUser.name,
-                            self: roomUser.name === user.username
+                            name: roomUser.name
                         }
                     })
                 };
@@ -226,9 +225,8 @@ socket.on('connection', function(connection) {
                         if (!winner || total > winner.score) {
                             winner = {
                                 id: user.id,
-                                score: total,
+                                score: total
                             };
-                            return;
                         }
                     });
 
