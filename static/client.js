@@ -30,6 +30,8 @@ $(function() {
         var myCards;
         var currentTurnUserId;
         var currentOfferCount;
+        var revealedCards;
+        var proposedCard;
 
         function instructions(title, message, waiting) {
             var instruction = $('#instruction');
@@ -79,9 +81,11 @@ $(function() {
                         }
                         var li = $('<li><a href="#"></a></li>');
                         li.find('a').text(room.name).on('click', join);
-                        li.append($('<span></span>').text(" — "+room.users.map(function(user) {
-                            return user.name
-                        }).join(", ")));
+                        li.append($('<span></span>').text(" — "+(
+                            room.users.length ?
+                                room.users.map(function(user) {
+                                return user.name
+                            }).join(", ") : "Empty")));
                         roomsList.append(li);
                         if (room.name == location.hash.slice(1)) {
                             join();
@@ -134,21 +138,26 @@ $(function() {
 
                     users = command.users;
 
-                    var otherPlayers = $("#game .other-players");
-                    otherPlayers.empty();
-                    Object.keys(command.users).forEach(function(userId) {
-                        var div = $('<div class="player"></div>');
-                        div.text(userName(userId));
-                        for (var i=0; i<myCards.length; i++) {
-                            div.append($('<div class="card other-card">' +
-                                'Unknown card'+
-                                '</div>'));
-                        }
-                    });
-
                     var playerNumber = 1;
                     Object.keys(users).forEach(function(userId) {
                         users[userId].number = playerNumber++;
+                    });
+
+                    var otherPlayers = $("#game .other-players");
+                    otherPlayers.empty();
+                    Object.keys(users).forEach(function(userId) {
+                        if (userId != myUserId) {
+                            var div = $('<div class="player"><span></span></div>');
+                            div.find('span').text(userName(userId)+":");
+                            users[userId].cards = [];
+                            users.div = div;
+                            for (var i=0; i<myCards.length; i++) {
+                                var card = $('<div class="card other-card small-card">etsy*trade</div>');
+                                div.append(card);
+                                users[userId].cards.push(card);
+                            }
+                            otherPlayers.append(div);
+                        }
                     });
                 },
                 'turn' : function(command) {
@@ -195,6 +204,8 @@ $(function() {
 
                         var item = command.card;
 
+                        proposedCard = item;
+
                         var div = $('<div class="card proposed-card">' +
                             '<img>' +
                             '<div class="title">'+item.title+'</div>' +
@@ -227,6 +238,12 @@ $(function() {
                     $('#game .table-offered').append($('<div class="card other-card">' +
                             '<div>etsy*trade</div>'+
                             '</div>').hide().show(500));
+                    if (users[command.user].cards) {
+                        var card = users[command.user].cards.pop();
+                        card.hide(500,function() {
+                            card.remove();
+                        });
+                    }
                 },
                 'reveal-offerings' : function(command) {
 //                    {
@@ -258,6 +275,8 @@ $(function() {
                     // TODO animate cards out
                     // TODO animate cards flip over
 
+                    revealedCards = command.cards;
+
 
                     var tableCenter = $("#game .table-offered")
                     tableCenter.find('div').remove();
@@ -281,7 +300,7 @@ $(function() {
 
                     if (currentTurnUserId == myUserId) {
                         state = CHOOSE_OFFER;
-                        instructions("Select a card", "You must choose a card to trade with.");
+                        instructions("Select an offered card");
                         tableCenter.addClass('selectable');
                     } else {
                         instructions("Please wait...", userName(currentTurnUserId)+" is selecting a trade...",true);
@@ -289,11 +308,54 @@ $(function() {
                 },
                 'card-chosen' : function(command) {
 //                    {
-//                        card: (user id)
+//                        card: (card id)
 //                    }
                     // TODO animate selected card to current player
                     // TODO animate other cards to various players
                     instructions("Card selected!");
+                    var chosenCardUserId;
+
+                    Object.keys(revealedCards).forEach(function(userId) {
+                        var card = revealedCards[userId];
+                        if (card.id == command.card) {
+                            chosenCardUserId = userId;
+                        }
+                    });
+
+                    Object.keys(revealedCards).forEach(function(userId) {
+                        var card = revealedCards[userId];
+
+                        var div = $('<div class="card small-card">' +
+                            '<img>' +
+                            '<div class="title">' + card.title + '</div>' +
+                            '</div>');
+                        div.find('img').attr('src', card.img.medium).attr('title', div.find(".title").text());
+
+
+                        if (currentTurnUserId == myUserId) {
+                            if (card.id == command.card) {
+                                $('#game .your-locked-cards').append(div);
+                            }
+                        } else {
+//                            if (card.id == command.card) {
+//                                users[currentTurnUserId].div.append(div);
+//                            }
+                        }
+//                        if (userId == chosenCardUserId && card.id == proposedCard.id) {
+//                            users[chosenCardUserId].div.append(div);
+//                        }
+                    });
+
+                    if (chosenCardUserId == myUserId) {
+                        var card = proposedCard
+                        var div = $('<div class="card small-card">' +
+                            '<img>' +
+                            '<div class="title">' + card.title + '</div>' +
+                            '</div>');
+                        div.find('img').attr('src', card.img.medium).attr('title', div.find(".title").text());
+
+                        $('#game .your-locked-cards').append(div);
+                    }
 
                     $('.table-offered .card').hide(500);
                     $('.table-proposed .card').hide(500);
@@ -310,6 +372,20 @@ $(function() {
 //                    }
                     // TODO show scores
                     // TODO Flip all cards
+                    instructions("Game over!");
+                    $('#game').hide(500);
+                    $('#winners .status').text(userName(command.winner.id)+" wins!");
+                    $('#winners').show(500);
+                    var winner = command.users[command.winner.id];
+                    populateUser($('#winner .winner'));
+                    Object.keys(command.users).forEach(function(userId) {
+                        var user = users[userId];
+                    });
+                    function populateUser(div) {
+
+                    }
+
+
                 },
                 'game-cancelled': function(command) {
                     $('#rooms').show(500);

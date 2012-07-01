@@ -178,6 +178,7 @@ socket.on('connection', function(connection) {
                     send('card-proposed', {
                         user: user_id,
                         card: {
+                            id: item.id,
                             img: item.img,
                             title: item.title
                         }
