@@ -421,7 +421,7 @@ $(function() {
                     $('#waiting').hide(500);
                     $('#game').hide(500);
                     $('#end').hide(500);
-                    window.location = location.toString();
+                    window.location = "/";
                 }
             };
             if (commands[json.type]) {
